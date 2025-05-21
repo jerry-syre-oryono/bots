@@ -1,4 +1,6 @@
 RSI Expert Advisor (ea rsi.mq5) – Documentation
+
+
 1. Overview
 This Expert Advisor (EA) executes trades based on the Relative Strength Index (RSI) indicator. It opens a buy when RSI exits the overbought region (above 70 by default) and a sell when RSI exits the oversold region (below 30 by default).
 
@@ -111,3 +113,90 @@ Edit
 Trade Type	Condition
 Buy	RSI exits overbought region: RSI_prev ≥ 100 - level and RSI_curr < 100 - level
 Sell	RSI exits oversold region: RSI_prev ≤ level and RSI_curr > level
+
+
+
+
+
+📘 Breakout EA v1 – Documentation
+✅ Overview
+Name: breakout ea.1.mq5
+Type: Automated Expert Advisor (EA)
+Platform: MetaTrader 5 (MQL5)
+Strategy: Range Breakout with Optional Martingale and Risk Management
+Author: MetaQuotes Ltd. / Modified by User
+Created: 2024
+
+🎯 Strategy Description
+This EA identifies price consolidation zones on a specified timeframe. It then enters trades when the price breaks above or below these zones, targeting continuation. A martingale-based position recovery system and risk-based lot sizing are implemented. Visual rectangles are drawn to show detected breakout ranges.
+
+⚙️ Input Parameters
+Name	Type	Description
+RiskPercent	double	Percentage of balance risked per trade (e.g., 0.5 = 0.5%)
+MartingaleFactor	double	Multiplier applied to lot size when recovering from losses
+TpPercent	double	Take-profit target as a percentage of balance
+Timeframe	ENUM_TIMEFRAMES	Timeframe to analyze (e.g., PERIOD_H1)
+MinRangeBars	int	Number of bars used to define the tight price range
+ComparisonBars	int	Bars used to compare if current range is relatively small
+MinRangeFactor	double	Current range must be smaller than (comparison range × factor) to be considered consolidation
+
+🧠 Key Variables
+CSetup class: Stores breakout setup state.
+
+time1, timex: Timestamps of range start/end.
+
+high, low: Price range boundaries.
+
+posTicket: Current trade ticket ID.
+
+lostMoney: Cumulative losses for this setup.
+
+CTrade trade: MQL5 trade execution object.
+
+📈 Core Logic
+1. Detect Consolidation
+Finds highest and lowest prices over MinRangeBars.
+
+Compares current range to previous range over ComparisonBars.
+
+If range is small enough (rangeBarsSize < comparisonBarsSize * MinRangeFactor):
+
+Store the breakout zone (high, low, time1, timex).
+
+Draw a rectangle for visualization.
+
+2. Entry Trigger
+If price breaks above high, attempt a buy.
+
+If price breaks below low, attempt a sell.
+
+3. Martingale Logic
+If previous position was in opposite direction and closed at a loss:
+
+Multiply last lot size by MartingaleFactor to recover loss.
+
+4. Lot Calculation
+Based on RiskPercent of balance.
+
+Risk per lot is derived from tick size and range width.
+
+5. Exit Condition
+When floating + recovered loss > TpPercent of balance:
+
+Close position.
+
+Reset the setup (posTicket = 0, lostMoney = 0, time1 = 0).
+
+🧾 Object Drawing
+Rectangle is drawn to visualize the breakout zone:
+
+mql5
+Copy
+Edit
+ObjectCreate(0, objName, OBJ_RECTANGLE, 0, time1, high, timex, low);
+⚠️ Known Issues
+Issue	Description
+Lot size bug	Inverse logic used in lot calculation (fixed in suggestions).
+Martingale lot logic	Adds MartingaleFactor instead of multiplying (should be fixed).
+Position read	Reads from PositionGet... without ensuring PositionSelectByTicket() returns true.
+Retcode not verified	Trade success (trade.ResultRetcode()) not checked after order placement.
